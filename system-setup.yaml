@@ -1,0 +1,43 @@
+#https://openebs.github.io/charts/openebs-ubuntu-setup.yaml
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  namespace: kube-system
+  name: system-setup
+  labels:
+    openebs.io/component-name: system-setup
+    openebs.io/version: 1.4.0
+  annotations:
+    command: &cmd sudo sh -c 'sudo apt -y purge open-iscsi; sudo apt install open-iscsi; systemctl enable iscsid ; sudo systemctl start iscsid ; sudo systemctl status iscsid ; ls -l /sbin/iscsiadm; echo 512 | sudo tee /sys/kernel/mm/hugepages/hugepages-2048kB/nr_hugepages ; lsblk '
+spec:
+  selector:
+    matchLabels:
+      openebs.io/component-name: system-setup
+  template:
+    metadata:
+      labels:
+        openebs.io/component-name: system-setup
+    spec:
+      hostNetwork: true
+      initContainers:
+      - name: init-node
+        command:
+          - nsenter
+          - --mount=/proc/1/ns/mnt
+          - --
+          - sh
+          - -c
+          - *cmd
+        image: alpine:3.7
+        securityContext:
+          privileged: true
+      hostPID: true
+      containers:
+      - name: wait
+        image: k8s.gcr.io/pause:3.1
+      hostPID: true
+      hostNetwork: true
+      tolerations:
+      - effect: NoSchedule
+        key: node-role.kubernetes.io/master

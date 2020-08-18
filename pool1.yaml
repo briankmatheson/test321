@@ -1,0 +1,9 @@
+apiVersion: "openebs.io/v1alpha1"
+kind: MayastorPool
+metadata:
+  name: test-pool1
+  namespace: mayastor
+spec:
+  node: pool-8ixpjoibo-3g8qj
+  disks: ["/dev/sda1"]
+
